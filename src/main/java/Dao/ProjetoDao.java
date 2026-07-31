@@ -1,74 +1,120 @@
 package Dao;
 
-import java.util.ArrayList;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import Model.Produto;
 
 /**
- *
  * @author Helena Amaro
  */
 public class ProjetoDao {
 
-    private ArrayList<Produto> lista = new ArrayList<>();
-
-    // Adicionar produto
+    // Adicionar produto (Tabela: produto)
     public void adicionar(Produto produto) {
-        lista.add(produto);
+        String sql = "INSERT INTO produto (id, nome, preço) VALUES (?, ?, ?)";
+        
+        try (Connection conn = Conexao.conectar();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, produto.getId());
+            stmt.setString(2, produto.getNome());
+            stmt.setDouble(3, produto.getPreco());
+            
+            stmt.executeUpdate();
+            
+        } catch (SQLException e) {
+            System.err.println("Erro ao cadastrar produto: " + e.getMessage());
+        }
     }
 
-    // Listar produtos
+    // Listar produtos (Tabela: produto)
     public void listar() {
-
-        if (lista.isEmpty()) {
-            System.out.println("\nNenhum produto cadastrado.");
-            return;
-        }
-
-        for (Produto p : lista) {
-            System.out.println("--------------");
-            System.out.println(p);
+        String sql = "SELECT * FROM produto";
+        boolean encontrou = false;
+        
+        try (Connection conn = Conexao.conectar();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            
+            while (rs.next()) {
+                encontrou = true;
+                int id = rs.getInt("id");
+                String nome = rs.getString("nome");
+                double preco = rs.getDouble("preço");
+                
+                Produto p = new Produto(id, nome, preco);
+                System.out.println("--------------");
+                System.out.println(p);
+            }
+            
+            if (!encontrou) {
+                System.out.println("\nNenhum produto cadastrado no banco de dados.");
+            }
+            
+        } catch (SQLException e) {
+            System.err.println("Erro ao listar produtos: " + e.getMessage());
         }
     }
 
-    // Atualizar produto
+    // Atualizar produto (Tabela: produto)
     public boolean atualizar(int id, String novoNome, double novoPreco) {
-
-        for (Produto p : lista) {
-
-            if (p.getId() == id) {
-
-                p.setNome(novoNome);
-                p.setPreco(novoPreco);
-                return true;
-
-            }
+        String sql = "UPDATE produto SET nome = ?, preco = ? WHERE id = ?";
+        
+        try (Connection conn = Conexao.conectar();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setString(1, novoNome);
+            stmt.setDouble(2, novoPreco);
+            stmt.setInt(3, id);
+            
+            int linhasAfetadas = stmt.executeUpdate();
+            return linhasAfetadas > 0;
+            
+        } catch (SQLException e) {
+            System.err.println("Erro ao atualizar produto: " + e.getMessage());
+            return false;
         }
-        return false;
     }
 
-    // Excluir produto
+    // Excluir produto (Tabela: produto)
     public boolean excluir(int id) {
-
-        for (Produto p : lista) {
-
-            if (p.getId() == id) {
-                lista.remove(p);
-                return true;
-            }
+        String sql = "DELETE FROM produto WHERE id = ?";
+        
+        try (Connection conn = Conexao.conectar();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, id);
+            
+            int linhasAfetadas = stmt.executeUpdate();
+            return linhasAfetadas > 0;
+            
+        } catch (SQLException e) {
+            System.err.println("Erro ao excluir produto: " + e.getMessage());
+            return false;
         }
-        return false;
     }
 
-    // Buscar produto
+    // Buscar produto (Tabela: produto)
     public Produto buscar(int id) {
-
-        for (Produto p : lista) {
-
-            if (p.getId() == id) {
-                return p;
+        String sql = "SELECT * FROM produto WHERE id = ?";
+        
+        try (Connection conn = Conexao.conectar();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, id);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    String nome = rs.getString("nome");
+                    double preco = rs.getDouble("preco");
+                    return new Produto(id, nome, preco);
+                }
             }
+            
+        } catch (SQLException e) {
+            System.err.println("Erro ao buscar produto: " + e.getMessage());
         }
-
         return null;
     }
 }
