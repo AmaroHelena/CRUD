@@ -13,7 +13,7 @@ public class ProjetoDao {
 
     // Adicionar produto (Tabela: produto)
     public void adicionar(Produto produto) {
-        String sql = "INSERT INTO produto (id, nome, preço) VALUES (?, ?, ?)";
+        String sql = "INSERT INTO produto (id, nome, preco) VALUES (?, ?, ?)";
         
         try (Connection conn = Conexao.conectar();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -42,7 +42,7 @@ public class ProjetoDao {
                 encontrou = true;
                 int id = rs.getInt("id");
                 String nome = rs.getString("nome");
-                double preco = rs.getDouble("preço");
+                double preco = rs.getDouble("preco");
                 
                 Produto p = new Produto(id, nome, preco);
                 System.out.println("--------------");
